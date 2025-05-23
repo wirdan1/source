@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hookrest Code - Code Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --dark-color: #2d3436;
+            --light-color: #f5f6fa;
+            --success-color: #00b894;
+            --danger-color: #d63031;
+            --warning-color: #fdcb6e;
+            --info-color: #0984e3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-container button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #searchBtn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #searchBtn:hover {
+            background-color: #5649d1;
+        }
+
+        #addBtn {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        #addBtn:hover {
+            background-color: #00a884;
+        }
+
+        .add-form {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .add-form h2 {
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group textarea {
+            font-family: 'Fira Code', monospace;
+            min-height: 200px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .form-actions button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #saveBtn {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        #saveBtn:hover {
+            background-color: #00a884;
+        }
+
+        #cancelBtn {
+            background-color: #dfe6e9;
+            color: var(--dark-color);
+        }
+
+        #cancelBtn:hover {
+            background-color: #b2bec3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .results-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        #resultsCount {
+            margin-bottom: 1.5rem;
+            color: #636e72;
+            font-style: italic;
+        }
+
+        .code-snippet {
+            margin-bottom: 2rem;
+            border: 1px solid #dfe6e9;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .snippet-header {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .snippet-title {
+            font-weight: 600;
+        }
+
+        .snippet-creator {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .code-container {
+            position: relative;
+        }
+
+        pre {
+            margin: 0;
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #282c34;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: block;
+            padding: 1rem;
+        }
+
+        .hljs {
+            background-color: #282c34;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: #636e72;
+        }
+
+        .snippet-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .copy-btn, .delete-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn {
+            background-color: var(--info-color);
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background-color: #0768b5;
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transform: translateY(-100px);
+            transition: transform 0.3s ease;
+        }
+
+        .copy-notification.show {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+            }
+
+            .search-container button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Hookrest Code</h1>
+            <p class="subtitle">Search and share code snippets</p>
+        </header>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search code snippets...">
+            <button id="searchBtn">Search</button>
+            <button id="addBtn">Add New</button>
+        </div>
+
+        <div class="add-form hidden">
+            <h2>Add New Code Snippet</h2>
+            <div class="form-group">
+                <label for="filename">Filename:</label>
+                <input type="text" id="filename" placeholder="example.js">
+            </div>
+            <div class="form-group">
+                <label for="creator">Creator:</label>
+                <input type="text" id="creator" placeholder="Your name">
+            </div>
+            <div class="form-group">
+                <label for="snippetCode">Code:</label>
+                <textarea id="snippetCode" rows="10" placeholder="Paste your code here..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button id="saveBtn">Save</button>
+                <button id="cancelBtn">Cancel</button>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div id="resultsCount"></div>
+            <div id="codeResults"></div>
+        </div>
+
+        <div id="copyNotification" class="copy-notification">
+            Code copied to clipboard!
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const addBtn = document.getElementById('addBtn');
+            const addForm = document.querySelector('.add-form');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const codeResults = document.getElementById('codeResults');
+            const resultsCount = document.getElementById('resultsCount');
+            const copyNotification = document.getElementById('copyNotification');
+            
+            // Form elements
+            const filenameInput = document.getElementById('filename');
+            const creatorInput = document.getElementById('creator');
+            const snippetCode = document.getElementById('snippetCode');
+            
+            // MongoDB connection details
+            const MONGODB_URI = 'mongodb+srv://zanssxploit:pISqUYgJJDfnLW9b@cluster0.fgram.mongodb.net/virtual_db?retryWrites=true&w=majority';
+            const API_BASE_URL = 'https://us-east-1.aws.data.mongodb-api.com/app/data-abcde/endpoint/data/v1';
+            
+            // Load code snippets from localStorage
+            let codeSnippets = [];
+            
+            // Function to fetch snippets
+            function fetchSnippets() {
+                return new Promise((resolve) => {
+                    const storedSnippets = localStorage.getItem('codeSnippets');
+                    if (storedSnippets) {
+                        resolve(JSON.parse(storedSnippets));
+                    } else {
+                        const defaultSnippets = [
+                            {
+                                filename: 'example.js',
+                                code: 'console.log("Hello, world!");\n\n// This is a sample code snippet\nfunction greet(name) {\n  return `Hello, ${name}!`;\n}\n\n// Call the function\nconst message = greet("World");\nconsole.log(message);\n\n// More code to demonstrate scrolling\nfor (let i = 0; i < 10; i++) {\n  console.log(`Iteration ${i}`);\n}\n\n// Another function\nfunction calculate(a, b) {\n  return a + b;\n}\n\n// And another\nconst multiply = (x, y) => x * y;',
+                                creator: 'System',
+                                language: 'js'
+                            }
+                        ];
+                        localStorage.setItem('codeSnippets', JSON.stringify(defaultSnippets));
+                        resolve(defaultSnippets);
+                    }
+                });
+            }
+            
+            // Function to save snippets
+            function saveSnippets(snippets) {
+                return new Promise((resolve) => {
+                    localStorage.setItem('codeSnippets', JSON.stringify(snippets));
+                    resolve(true);
+                });
+            }
+            
+            // Function to show copy notification
+            function showCopyNotification() {
+                copyNotification.classList.add('show');
+                setTimeout(() => {
+                    copyNotification.classList.remove('show');
+                }, 2000);
+            }
+            
+            // Initialize the app
+            async function initApp() {
+                codeSnippets = await fetchSnippets();
+                displayResults(codeSnippets);
+            }
+            
+            // Search functionality
+            searchBtn.addEventListener('click', searchCode);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchCode();
+                }
+            });
+            
+            // Add new code snippet
+            addBtn.addEventListener('click', function() {
+                addForm.classList.remove('hidden');
+            });
+            
+            // Cancel adding new snippet
+            cancelBtn.addEventListener('click', function() {
+                addForm.classList.add('hidden');
+                resetForm();
+            });
+            
+            // Save new code snippet
+            saveBtn.addEventListener('click', async function() {
+                const filename = filenameInput.value.trim();
+                const creator = creatorInput.value.trim();
+                const code = snippetCode.value.trim();
+                
+                if (!filename || !code || !creator) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                const language = filename.split('.').pop();
+                const newSnippet = {
+                    filename,
+                    code,
+                    creator,
+                    language
+                };
+                
+                try {
+                    // Add to local array
+                    codeSnippets.push(newSnippet);
+                    
+                    // Save to localStorage
+                    await saveSnippets(codeSnippets);
+                    
+                    // Display results
+                    displayResults(codeSnippets);
+                    
+                    // Reset form and hide
+                    resetForm();
+                    addForm.classList.add('hidden');
+                } catch (error) {
+                    console.error('Error saving snippet:', error);
+                    alert('Failed to save snippet. Please try again.');
+                }
+            });
+            
+            // Function to search code
+            function searchCode() {
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                if (!searchTerm) {
+                    displayResults(codeSnippets);
+                    return;
+                }
+                
+                const filtered = codeSnippets.filter(snippet => {
+                    return snippet.filename.toLowerCase().includes(searchTerm) || 
+                           snippet.code.toLowerCase().includes(searchTerm) ||
+                           snippet.creator.toLowerCase().includes(searchTerm);
+                });
+                
+                displayResults(filtered);
+            }
+            
+            // Function to display results
+            function displayResults(snippets) {
+                if (snippets.length === 0) {
+                    codeResults.innerHTML = '<div class="no-results">No code snippets found. Try a different search term.</div>';
+                    resultsCount.textContent = '0 results found';
+                    return;
+                }
+                
+                resultsCount.textContent = `${snippets.length} ${snippets.length === 1 ? 'result' : 'results'} found`;
+                
+                let html = '';
+                snippets.forEach(({filename, code, creator, language}, index) => {
+                    html += `
+                        <div class="code-snippet">
+                            <div class="snippet-header">
+                                <div>
+                                    <span class="snippet-title">${filename}</span>
+                                    <span class="snippet-creator">By: ${creator}</span>
+                                </div>
+                                <div class="snippet-actions">
+                                    <button class="copy-btn" data-code="${escapeHtml(code)}">Copy</button>
+                                    <button class="delete-btn" data-index="${index}">Delete</button>
+                                </div>
+                            </div>
+                            <div class="code-container">
+                                <pre><code class="language-${language}">${escapeHtml(code)}</code></pre>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                codeResults.innerHTML = html;
+                
+                // Apply syntax highlighting
+                document.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+                
+                // Add event listeners to copy buttons
+                document.querySelectorAll('.copy-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const code = this.getAttribute('data-code');
+                        navigator.clipboard.writeText(unescapeHtml(code))
+                            .then(() => {
+                                showCopyNotification();
+                            })
+                            .catch(err => {
+                                console.error('Failed to copy code: ', err);
+                                alert('Failed to copy code. Please try again.');
+                            });
+                    });
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', async function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        if (confirm('Are you sure you want to delete this snippet?')) {
+                            try {
+                                // Remove from local array
+                                codeSnippets.splice(index, 1);
+                                
+                                // Save to localStorage
+                                await saveSnippets(codeSnippets);
+                                
+                                // Refresh display
+                                displayResults(codeSnippets);
+                            } catch (error) {
+                                console.error('Error deleting snippet:', error);
+                                alert('Failed to delete snippet. Please try again.');
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Helper function to escape HTML
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+            
+            // Helper function to unescape HTML
+            function unescapeHtml(safe) {
+                return safe
+                    .replace(/&amp;/g, "&")
+                    .replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#039;/g, "'");
+            }
+            
+            // Reset form
+            function resetForm() {
+                filenameInput.value = '';
+                creatorInput.value = '';
+                snippetCode.value = '';
+            }
+            
+            // Initialize the application
+            initApp();
+        });
+    </script>
+</body>
+</html>
