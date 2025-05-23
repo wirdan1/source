@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hookrest Code - Code Search</title>
+    <title>Hookrest code</title>
+    <!-- Favicon -->
+    <link rel="icon" href="https://qu.ax/HfDOy.jpeg" type="image/png">
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Highlight.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <style>
         :root {
@@ -46,6 +52,10 @@
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .subtitle {
@@ -81,6 +91,9 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         #searchBtn {
@@ -112,6 +125,9 @@
         .add-form h2 {
             margin-bottom: 1.5rem;
             color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .form-group {
@@ -159,6 +175,9 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         #saveBtn {
@@ -194,6 +213,9 @@
             margin-bottom: 1.5rem;
             color: #636e72;
             font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .code-snippet {
@@ -214,11 +236,17 @@
 
         .snippet-title {
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .snippet-creator {
             font-size: 0.9rem;
             opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
         .code-container {
@@ -248,6 +276,10 @@
             text-align: center;
             padding: 2rem;
             color: #636e72;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
         }
 
         .snippet-actions {
@@ -256,12 +288,15 @@
         }
 
         .copy-btn, .delete-btn {
-            padding: 0.25rem 0.5rem;
+            padding: 0.5rem 0.75rem;
             border: none;
             border-radius: 4px;
             font-size: 0.8rem;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
         .copy-btn {
@@ -294,6 +329,9 @@
             z-index: 1000;
             transform: translateY(-100px);
             transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .copy-notification.show {
@@ -314,47 +352,84 @@
 <body>
     <div class="container">
         <header>
-            <h1>Hookrest Code</h1>
+            <h1>
+                <i class="fas fa-code"></i>
+                Source
+            </h1>
             <p class="subtitle">Search and share code snippets</p>
         </header>
 
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Search code snippets...">
-            <button id="searchBtn">Search</button>
-            <button id="addBtn">Add New</button>
+            <button id="searchBtn">
+                <i class="fas fa-search"></i>
+                Search
+            </button>
+            <button id="addBtn">
+                <i class="fas fa-plus"></i>
+                Add New
+            </button>
         </div>
 
         <div class="add-form hidden">
-            <h2>Add New Code Snippet</h2>
+            <h2>
+                <i class="fas fa-file-code"></i>
+                Add New Code Snippet
+            </h2>
             <div class="form-group">
-                <label for="filename">Filename:</label>
+                <label for="filename">
+                    <i class="fas fa-file-alt"></i>
+                    Filename:
+                </label>
                 <input type="text" id="filename" placeholder="example.js">
             </div>
             <div class="form-group">
-                <label for="creator">Creator:</label>
+                <label for="creator">
+                    <i class="fas fa-user"></i>
+                    Creator:
+                </label>
                 <input type="text" id="creator" placeholder="Your name">
             </div>
             <div class="form-group">
-                <label for="snippetCode">Code:</label>
+                <label for="snippetCode">
+                    <i class="fas fa-code"></i>
+                    Code:
+                </label>
                 <textarea id="snippetCode" rows="10" placeholder="Paste your code here..."></textarea>
             </div>
             <div class="form-actions">
-                <button id="saveBtn">Save</button>
-                <button id="cancelBtn">Cancel</button>
+                <button id="saveBtn">
+                    <i class="fas fa-save"></i>
+                    Save
+                </button>
+                <button id="cancelBtn">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
             </div>
         </div>
 
         <div class="results-container">
-            <div id="resultsCount"></div>
-            <div id="codeResults"></div>
+            <div id="resultsCount">
+                <i class="fas fa-list"></i>
+                <span>Loading snippets...</span>
+            </div>
+            <div id="codeResults">
+                <div class="no-results">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                    <p>Loading code snippets...</p>
+                </div>
+            </div>
         </div>
 
         <div id="copyNotification" class="copy-notification">
+            <i class="fas fa-check-circle"></i>
             Code copied to clipboard!
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // DOM Elements
@@ -373,10 +448,6 @@
             const creatorInput = document.getElementById('creator');
             const snippetCode = document.getElementById('snippetCode');
             
-            // MongoDB connection details
-            const MONGODB_URI = 'mongodb+srv://zanssxploit:pISqUYgJJDfnLW9b@cluster0.fgram.mongodb.net/virtual_db?retryWrites=true&w=majority';
-            const API_BASE_URL = 'https://us-east-1.aws.data.mongodb-api.com/app/data-abcde/endpoint/data/v1';
-            
             // Load code snippets from localStorage
             let codeSnippets = [];
             
@@ -393,6 +464,12 @@
                                 code: 'console.log("Hello, world!");\n\n// This is a sample code snippet\nfunction greet(name) {\n  return `Hello, ${name}!`;\n}\n\n// Call the function\nconst message = greet("World");\nconsole.log(message);\n\n// More code to demonstrate scrolling\nfor (let i = 0; i < 10; i++) {\n  console.log(`Iteration ${i}`);\n}\n\n// Another function\nfunction calculate(a, b) {\n  return a + b;\n}\n\n// And another\nconst multiply = (x, y) => x * y;',
                                 creator: 'System',
                                 language: 'js'
+                            },
+                            {
+                                filename: 'style.css',
+                                code: '/* Sample CSS code */\nbody {\n  font-family: Arial, sans-serif;\n  margin: 0;\n  padding: 0;\n  background-color: #f5f5f5;\n}\n\n.container {\n  max-width: 1200px;\n  margin: 0 auto;\n  padding: 20px;\n}\n\n.button {\n  display: inline-block;\n  padding: 10px 20px;\n  background-color: #4285f4;\n  color: white;\n  text-decoration: none;\n  border-radius: 4px;\n  transition: background-color 0.3s;\n}\n\n.button:hover {\n  background-color: #3367d6;\n}',
+                                creator: 'System',
+                                language: 'css'
                             }
                         ];
                         localStorage.setItem('codeSnippets', JSON.stringify(defaultSnippets));
@@ -501,12 +578,23 @@
             // Function to display results
             function displayResults(snippets) {
                 if (snippets.length === 0) {
-                    codeResults.innerHTML = '<div class="no-results">No code snippets found. Try a different search term.</div>';
-                    resultsCount.textContent = '0 results found';
+                    codeResults.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-search" style="font-size: 2rem;"></i>
+                            <p>No code snippets found. Try a different search term.</p>
+                        </div>
+                    `;
+                    resultsCount.innerHTML = `
+                        <i class="fas fa-info-circle"></i>
+                        <span>0 results found</span>
+                    `;
                     return;
                 }
                 
-                resultsCount.textContent = `${snippets.length} ${snippets.length === 1 ? 'result' : 'results'} found`;
+                resultsCount.innerHTML = `
+                    <i class="fas fa-list"></i>
+                    <span>${snippets.length} ${snippets.length === 1 ? 'result' : 'results'} found</span>
+                `;
                 
                 let html = '';
                 snippets.forEach(({filename, code, creator, language}, index) => {
@@ -514,12 +602,24 @@
                         <div class="code-snippet">
                             <div class="snippet-header">
                                 <div>
-                                    <span class="snippet-title">${filename}</span>
-                                    <span class="snippet-creator">By: ${creator}</span>
+                                    <span class="snippet-title">
+                                        <i class="fas fa-file-code"></i>
+                                        ${filename}
+                                    </span>
+                                    <span class="snippet-creator">
+                                        <i class="fas fa-user"></i>
+                                        By: ${creator}
+                                    </span>
                                 </div>
                                 <div class="snippet-actions">
-                                    <button class="copy-btn" data-code="${escapeHtml(code)}">Copy</button>
-                                    <button class="delete-btn" data-index="${index}">Delete</button>
+                                    <button class="copy-btn" data-code="${escapeHtml(code)}">
+                                        <i class="far fa-copy"></i>
+                                        Copy
+                                    </button>
+                                    <button class="delete-btn" data-index="${index}">
+                                        <i class="fas fa-trash-alt"></i>
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                             <div class="code-container">
