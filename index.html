@@ -448,42 +448,76 @@
             const creatorInput = document.getElementById('creator');
             const snippetCode = document.getElementById('snippetCode');
             
-            // Load code snippets from localStorage
-            let codeSnippets = [];
+            // MongoDB connection details
+            const MONGODB_URI = 'mongodb+srv://zanssxploit:pISqUYgJJDfnLW9b@cluster0.fgram.mongodb.net/virtual_db?retryWrites=true&w=majority';
+            const API_BASE_URL = 'https://us-east-1.aws.data.mongodb-api.com/app/data-zanss/endpoint/data/v1';
             
-            // Function to fetch snippets
-            function fetchSnippets() {
-                return new Promise((resolve) => {
-                    const storedSnippets = localStorage.getItem('codeSnippets');
-                    if (storedSnippets) {
-                        resolve(JSON.parse(storedSnippets));
-                    } else {
-                        const defaultSnippets = [
-                            {
-                                filename: 'example.js',
-                                code: 'console.log("Hello, world!");\n\n// This is a sample code snippet\nfunction greet(name) {\n  return `Hello, ${name}!`;\n}\n\n// Call the function\nconst message = greet("World");\nconsole.log(message);\n\n// More code to demonstrate scrolling\nfor (let i = 0; i < 10; i++) {\n  console.log(`Iteration ${i}`);\n}\n\n// Another function\nfunction calculate(a, b) {\n  return a + b;\n}\n\n// And another\nconst multiply = (x, y) => x * y;',
-                                creator: 'System',
-                                language: 'js'
-                            },
-                            {
-                                filename: 'style.css',
-                                code: '/* Sample CSS code */\nbody {\n  font-family: Arial, sans-serif;\n  margin: 0;\n  padding: 0;\n  background-color: #f5f5f5;\n}\n\n.container {\n  max-width: 1200px;\n  margin: 0 auto;\n  padding: 20px;\n}\n\n.button {\n  display: inline-block;\n  padding: 10px 20px;\n  background-color: #4285f4;\n  color: white;\n  text-decoration: none;\n  border-radius: 4px;\n  transition: background-color 0.3s;\n}\n\n.button:hover {\n  background-color: #3367d6;\n}',
-                                creator: 'System',
-                                language: 'css'
-                            }
-                        ];
-                        localStorage.setItem('codeSnippets', JSON.stringify(defaultSnippets));
-                        resolve(defaultSnippets);
+            // Function to fetch snippets from MongoDB
+            async function fetchSnippets() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/snippets`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'api-key': 'pISqUYgJJDfnLW9b'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch snippets');
                     }
-                });
+                    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error fetching snippets:', error);
+                    return [];
+                }
             }
             
-            // Function to save snippets
-            function saveSnippets(snippets) {
-                return new Promise((resolve) => {
-                    localStorage.setItem('codeSnippets', JSON.stringify(snippets));
-                    resolve(true);
-                });
+            // Function to save a new snippet to MongoDB
+            async function saveSnippet(snippet) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/snippets`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'api-key': 'pISqUYgJJDfnLW9b'
+                        },
+                        body: JSON.stringify(snippet)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to save snippet');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error saving snippet:', error);
+                    throw error;
+                }
+            }
+            
+            // Function to delete a snippet from MongoDB
+            async function deleteSnippet(id) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/snippets/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'api-key': 'pISqUYgJJDfnLW9b'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to delete snippet');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error deleting snippet:', error);
+                    throw error;
+                }
             }
             
             // Function to show copy notification
@@ -496,8 +530,18 @@
             
             // Initialize the app
             async function initApp() {
-                codeSnippets = await fetchSnippets();
-                displayResults(codeSnippets);
+                try {
+                    const snippets = await fetchSnippets();
+                    displayResults(snippets);
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                    codeResults.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+                            <p>Failed to load snippets. Please try again later.</p>
+                        </div>
+                    `;
+                }
             }
             
             // Search functionality
@@ -535,18 +579,17 @@
                     filename,
                     code,
                     creator,
-                    language
+                    language,
+                    createdAt: new Date().toISOString()
                 };
                 
                 try {
-                    // Add to local array
-                    codeSnippets.push(newSnippet);
+                    // Save to MongoDB
+                    await saveSnippet(newSnippet);
                     
-                    // Save to localStorage
-                    await saveSnippets(codeSnippets);
-                    
-                    // Display results
-                    displayResults(codeSnippets);
+                    // Refresh the list
+                    const snippets = await fetchSnippets();
+                    displayResults(snippets);
                     
                     // Reset form and hide
                     resetForm();
@@ -558,30 +601,37 @@
             });
             
             // Function to search code
-            function searchCode() {
+            async function searchCode() {
                 const searchTerm = searchInput.value.toLowerCase();
                 
-                if (!searchTerm) {
-                    displayResults(codeSnippets);
-                    return;
+                try {
+                    const snippets = await fetchSnippets();
+                    
+                    if (!searchTerm) {
+                        displayResults(snippets);
+                        return;
+                    }
+                    
+                    const filtered = snippets.filter(snippet => {
+                        return snippet.filename.toLowerCase().includes(searchTerm) || 
+                               snippet.code.toLowerCase().includes(searchTerm) ||
+                               snippet.creator.toLowerCase().includes(searchTerm);
+                    });
+                    
+                    displayResults(filtered);
+                } catch (error) {
+                    console.error('Error searching snippets:', error);
+                    alert('Failed to search snippets. Please try again.');
                 }
-                
-                const filtered = codeSnippets.filter(snippet => {
-                    return snippet.filename.toLowerCase().includes(searchTerm) || 
-                           snippet.code.toLowerCase().includes(searchTerm) ||
-                           snippet.creator.toLowerCase().includes(searchTerm);
-                });
-                
-                displayResults(filtered);
             }
             
             // Function to display results
             function displayResults(snippets) {
-                if (snippets.length === 0) {
+                if (!snippets || snippets.length === 0) {
                     codeResults.innerHTML = `
                         <div class="no-results">
                             <i class="fas fa-search" style="font-size: 2rem;"></i>
-                            <p>No code snippets found. Try a different search term.</p>
+                            <p>No code snippets found. Try a different search term or add a new snippet.</p>
                         </div>
                     `;
                     resultsCount.innerHTML = `
@@ -597,33 +647,33 @@
                 `;
                 
                 let html = '';
-                snippets.forEach(({filename, code, creator, language}, index) => {
+                snippets.forEach((snippet) => {
                     html += `
                         <div class="code-snippet">
                             <div class="snippet-header">
                                 <div>
                                     <span class="snippet-title">
                                         <i class="fas fa-file-code"></i>
-                                        ${filename}
+                                        ${escapeHtml(snippet.filename)}
                                     </span>
                                     <span class="snippet-creator">
                                         <i class="fas fa-user"></i>
-                                        By: ${creator}
+                                        By: ${escapeHtml(snippet.creator)}
                                     </span>
                                 </div>
                                 <div class="snippet-actions">
-                                    <button class="copy-btn" data-code="${escapeHtml(code)}">
+                                    <button class="copy-btn" data-code="${escapeHtml(snippet.code)}">
                                         <i class="far fa-copy"></i>
                                         Copy
                                     </button>
-                                    <button class="delete-btn" data-index="${index}">
+                                    <button class="delete-btn" data-id="${snippet._id}">
                                         <i class="fas fa-trash-alt"></i>
                                         Delete
                                     </button>
                                 </div>
                             </div>
                             <div class="code-container">
-                                <pre><code class="language-${language}">${escapeHtml(code)}</code></pre>
+                                <pre><code class="language-${snippet.language || 'plaintext'}">${escapeHtml(snippet.code)}</code></pre>
                             </div>
                         </div>
                     `;
@@ -654,17 +704,12 @@
                 // Add event listeners to delete buttons
                 document.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', async function() {
-                        const index = parseInt(this.getAttribute('data-index'));
+                        const id = this.getAttribute('data-id');
                         if (confirm('Are you sure you want to delete this snippet?')) {
                             try {
-                                // Remove from local array
-                                codeSnippets.splice(index, 1);
-                                
-                                // Save to localStorage
-                                await saveSnippets(codeSnippets);
-                                
-                                // Refresh display
-                                displayResults(codeSnippets);
+                                await deleteSnippet(id);
+                                const snippets = await fetchSnippets();
+                                displayResults(snippets);
                             } catch (error) {
                                 console.error('Error deleting snippet:', error);
                                 alert('Failed to delete snippet. Please try again.');
@@ -676,6 +721,7 @@
             
             // Helper function to escape HTML
             function escapeHtml(unsafe) {
+                if (!unsafe) return '';
                 return unsafe
                     .replace(/&/g, "&amp;")
                     .replace(/</g, "&lt;")
@@ -686,6 +732,7 @@
             
             // Helper function to unescape HTML
             function unescapeHtml(safe) {
+                if (!safe) return '';
                 return safe
                     .replace(/&amp;/g, "&")
                     .replace(/&lt;/g, "<")
