@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code search</title>
+    <title>Code Snippets Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
@@ -421,3 +421,318 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const addBtn = document.getElementById('addBtn');
+            const addForm = document.getElementById('addForm');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const codeResults = document.getElementById('codeResults');
+            const resultsCount = document.getElementById('resultsCount');
+            const copyNotification = document.getElementById('copyNotification');
+            
+            // Form elements
+            const filenameInput = document.getElementById('filename');
+            const creatorInput = document.getElementById('creator');
+            const snippetCode = document.getElementById('snippetCode');
+            
+            // API configuration - Replace with your actual backend URL
+            const API_BASE_URL = 'http://localhost:5000/api'; // Change this to your backend URL
+            
+            // Function to fetch snippets from backend
+            async function fetchSnippets() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/snippets`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch snippets');
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching snippets:', error);
+                    showError('Failed to load snippets. Please try again later.');
+                    return [];
+                }
+            }
+            
+            // Function to save a new snippet
+            async function saveSnippet(snippet) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/snippets`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(snippet)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to save snippet');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error saving snippet:', error);
+                    throw error;
+                }
+            }
+            
+            // Function to delete a snippet
+            async function deleteSnippet(id) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/snippets/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to delete snippet');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error deleting snippet:', error);
+                    throw error;
+                }
+            }
+            
+            // Function to show copy notification
+            function showCopyNotification() {
+                copyNotification.classList.add('show');
+                setTimeout(() => {
+                    copyNotification.classList.remove('show');
+                }, 2000);
+            }
+            
+            // Function to show error message
+            function showError(message) {
+                codeResults.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+            
+            // Initialize the app
+            async function initApp() {
+                try {
+                    const snippets = await fetchSnippets();
+                    displayResults(snippets);
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                    showError('Failed to initialize application. Please refresh the page.');
+                }
+            }
+            
+            // Search functionality
+            searchBtn.addEventListener('click', searchCode);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchCode();
+                }
+            });
+            
+            // Add new code snippet
+            addBtn.addEventListener('click', function() {
+                addForm.style.display = 'block';
+            });
+            
+            // Cancel adding new snippet
+            cancelBtn.addEventListener('click', function() {
+                addForm.style.display = 'none';
+                resetForm();
+            });
+            
+            // Save new code snippet
+            saveBtn.addEventListener('click', async function() {
+                const filename = filenameInput.value.trim();
+                const creator = creatorInput.value.trim();
+                const code = snippetCode.value.trim();
+                
+                if (!filename || !code || !creator) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                const language = filename.split('.').pop();
+                const newSnippet = {
+                    filename,
+                    code,
+                    creator,
+                    language
+                };
+                
+                try {
+                    // Save to backend
+                    await saveSnippet(newSnippet);
+                    
+                    // Refresh the list
+                    const snippets = await fetchSnippets();
+                    displayResults(snippets);
+                    
+                    // Reset form and hide
+                    resetForm();
+                    addForm.style.display = 'none';
+                } catch (error) {
+                    console.error('Error saving snippet:', error);
+                    alert('Failed to save snippet. Please try again.');
+                }
+            });
+            
+            // Function to search code
+            async function searchCode() {
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                try {
+                    const snippets = await fetchSnippets();
+                    
+                    if (!searchTerm) {
+                        displayResults(snippets);
+                        return;
+                    }
+                    
+                    const filtered = snippets.filter(snippet => {
+                        return snippet.filename.toLowerCase().includes(searchTerm) || 
+                               snippet.code.toLowerCase().includes(searchTerm) ||
+                               snippet.creator.toLowerCase().includes(searchTerm);
+                    });
+                    
+                    displayResults(filtered);
+                } catch (error) {
+                    console.error('Error searching snippets:', error);
+                    alert('Failed to search snippets. Please try again.');
+                }
+            }
+            
+            // Function to display results
+            function displayResults(snippets) {
+                if (!snippets || snippets.length === 0) {
+                    codeResults.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-search" style="font-size: 2rem;"></i>
+                            <p>No code snippets found. Try a different search term or add a new snippet.</p>
+                        </div>
+                    `;
+                    resultsCount.innerHTML = `
+                        <i class="fas fa-info-circle"></i>
+                        <span>0 results found</span>
+                    `;
+                    return;
+                }
+                
+                resultsCount.innerHTML = `
+                    <i class="fas fa-list"></i>
+                    <span>${snippets.length} ${snippets.length === 1 ? 'result' : 'results'} found</span>
+                `;
+                
+                let html = '';
+                snippets.forEach((snippet) => {
+                    html += `
+                        <div class="code-snippet">
+                            <div class="snippet-header">
+                                <div>
+                                    <span class="snippet-title">
+                                        <i class="fas fa-file-code"></i>
+                                        ${escapeHtml(snippet.filename)}
+                                    </span>
+                                    <span class="snippet-creator">
+                                        <i class="fas fa-user"></i>
+                                        By: ${escapeHtml(snippet.creator)}
+                                    </span>
+                                </div>
+                                <div class="snippet-actions">
+                                    <button class="copy-btn" data-code="${escapeHtml(snippet.code)}">
+                                        <i class="far fa-copy"></i>
+                                        Copy
+                                    </button>
+                                    <button class="delete-btn" data-id="${snippet._id}">
+                                        <i class="fas fa-trash-alt"></i>
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="code-container">
+                                <pre><code class="language-${snippet.language || 'plaintext'}">${escapeHtml(snippet.code)}</code></pre>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                codeResults.innerHTML = html;
+                
+                // Apply syntax highlighting
+                document.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+                
+                // Add event listeners to copy buttons
+                document.querySelectorAll('.copy-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const code = this.getAttribute('data-code');
+                        navigator.clipboard.writeText(unescapeHtml(code))
+                            .then(() => {
+                                showCopyNotification();
+                            })
+                            .catch(err => {
+                                console.error('Failed to copy code: ', err);
+                                alert('Failed to copy code. Please try again.');
+                            });
+                    });
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', async function() {
+                        const id = this.getAttribute('data-id');
+                        if (confirm('Are you sure you want to delete this snippet?')) {
+                            try {
+                                await deleteSnippet(id);
+                                const snippets = await fetchSnippets();
+                                displayResults(snippets);
+                            } catch (error) {
+                                console.error('Error deleting snippet:', error);
+                                alert('Failed to delete snippet. Please try again.');
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Helper function to escape HTML
+            function escapeHtml(unsafe) {
+                if (!unsafe) return '';
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+            
+            // Helper function to unescape HTML
+            function unescapeHtml(safe) {
+                if (!safe) return '';
+                return safe
+                    .replace(/&amp;/g, "&")
+                    .replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#039;/g, "'");
+            }
+            
+            // Reset form
+            function resetForm() {
+                filenameInput.value = '';
+                creatorInput.value = '';
+                snippetCode.value = '';
+            }
+            
+            // Initialize the application
+            initApp();
+        });
+    </script>
+</body>
+</html>
